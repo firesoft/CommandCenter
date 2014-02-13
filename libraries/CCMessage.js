@@ -1,4 +1,4 @@
-function GDMessage(from, group, command, data) {
+function CCMessage(from, group, command, data) {
 	if (arguments.length == 1) {
 		this.initFromOneArgument(from);
 	} else {
@@ -9,7 +9,7 @@ function GDMessage(from, group, command, data) {
 	}
 }
 
-GDMessage.prototype.initFromOneArgument = function(message) {
+CCMessage.prototype.initFromOneArgument = function(message) {
 
 	if (typeof message == 'object' && message instanceof Buffer) {
 		message = message.toString();
@@ -25,8 +25,8 @@ GDMessage.prototype.initFromOneArgument = function(message) {
 	this.data = message.data;
 }
 
-GDMessage.prototype.serialize = function() {
+CCMessage.prototype.serialize = function() {
 	return JSON.stringify({from: this.from, group: this.group, command: this.command, data: this.data});
 }
 
-module.exports = GDMessage;
+module.exports = CCMessage;
