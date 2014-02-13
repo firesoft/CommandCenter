@@ -8,10 +8,15 @@ var client =  net.connect(connectionAddress, function() {
 	
 	var message = new GDMessage(0, 'server', 'authorize', {group: 'test_group'});
 	client.write(message.serialize());
+	
+	setTimeout(function() {
+		var message = new GDMessage(1, 'all', 'fuck you!', {message: 'fakju bicz'});
+		client.write(message.serialize());
+	}, 1000);
 });
 
 client.on('data', function(data) {
-  console.log(data.toString());
+  console.log(data.toString());  
 });
 client.on('end', function() {
   console.log('client disconnected');

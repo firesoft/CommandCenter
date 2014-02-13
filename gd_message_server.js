@@ -41,6 +41,14 @@ ServerClients.prototype.findClientIndex = function(client_id) {
 	return -1;
 }
 
+ServerClients.prototype.sendMessageToGroup = function(message) {
+	for (var index=0; index<this.clients.length; index++) {
+		if (this.clients[index].group == message.group || message.group=='all') {
+			this.clients[index].sendMessage(message, null);
+		}
+	}
+}
+
 /////////////
 
 function ServerClient(client_id, socket, collection) {
@@ -82,7 +90,11 @@ ServerClient.prototype.onDataReceived = function(data) {
 			this.processMessage(message);
 		}
 	} catch(e) {
-		this.sendMessage(new GDMessage(0, 'error', e.name, {message: e.message}));
+		if (e instanceof CommandCenterException) {
+			this.sendMessage(new GDMessage(0, 'error', e.name, {message: e.message}));
+		} else {
+			throw e;
+		}
 	}
 }
 
@@ -115,6 +127,7 @@ ServerClient.prototype.validateMessage = function(message) {
 }
 
 ServerClient.prototype.processMessage = function(message) {
+	this.collection.sendMessageToGroup(message);
 }
 
 ServerClient.prototype.isAuthorized = function() {
