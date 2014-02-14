@@ -1,7 +1,10 @@
+var util = require('util');
+var events = require('events');
 var net = require('net');
-var CCMessage = require('./CCMessage')
+var CCMessage = require('./CCMessage');
 
 function CCClient(params) {
+	events.EventEmitter.call(this);
 	this.socket = null;
 	this.status = 'offline';
 	this.connectionAddress = {host: 'localhost', port: 8088};
@@ -14,6 +17,8 @@ function CCClient(params) {
 	//this.onCannotConnectCallback
 }
 
+util.inherits(CCClient, events.EventEmitter);
+
 CCClient.prototype.connect = function() {
 	this.socket = net.connect(this.connectionAddress, this.onConnect.bind(this));
 	this.bindSocketEvents();
@@ -21,10 +26,7 @@ CCClient.prototype.connect = function() {
 
 CCClient.prototype.onConnect = function() {
 	this.status = 'connected';
-	
-	if (this.onConnectCallback) {
-		this.onConnectCallback();
-	}
+	this.emit('connected');
 	
 	this.authorize();
 }
@@ -37,6 +39,7 @@ CCClient.prototype.authorize = function() {
 }
 
 CCClient.bindSocketEvents = function() {
+	
 }
 
 CCClient.prototype.onData = function (data) {
