@@ -28,6 +28,9 @@ CCServerClients.prototype.findClientIndex = function(client_id) {
 
 CCServerClients.prototype.sendMessageToGroup = function(message) {
 	for (var index=0; index<this.clients.length; index++) {
+		if (this.clients[index].id == message.from) {
+			continue;
+		}
 		if (this.clients[index].group == message.group || message.group=='all') {
 			this.clients[index].sendMessage(message, null);
 		}

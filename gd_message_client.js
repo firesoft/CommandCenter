@@ -22,6 +22,7 @@ client.on('end', function() {
   console.log('client disconnected');
 });
 
-client.on('error', function() {
-  console.log('client disconnected');
+client.on('error', function(error) {
+
+  console.log(error);
 });
