@@ -21,7 +21,8 @@ CCSocket.prototype.connect = function(address) {
 	this.state = 'connecting';
 	this.address = address;
 	this.reconnectTimeout = 1000;
-	this.socket = net.connect(this.address, this.onConnect.bind(this));
+	this.socket = net.connect(this.address);
+	this.socket.setKeepAlive(true);
 	this.bindSocketEvents();
 }
 
@@ -31,6 +32,7 @@ CCSocket.prototype.onConnect = function() {
 }
 
 CCSocket.prototype.bindSocketEvents = function() {
+	this.socket.on('connect', this.onConnect.bind(this));
 	this.socket.on('data', this.onData.bind(this));
 	this.socket.on('error', this.onError.bind(this));
 }
