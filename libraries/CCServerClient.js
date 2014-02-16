@@ -31,7 +31,7 @@ CCServerClient.prototype.onError = function() {
 CCServerClient.prototype.onDataReceived = function(data) {
 
 	try {
-		var message = this.parseData(data);
+		var message = new CCMessage(data);
 		
 		if (!this.authorized) {
 			this.authorize(message);
@@ -41,29 +41,19 @@ CCServerClient.prototype.onDataReceived = function(data) {
 		}
 	} catch(e) {
 		if (e instanceof CCException) {
-			this.sendMessage(new CCMessage(0, 'error', e.name, {message: e.message}));
+			this.sendMessage(new CCMessage(0, 'server', 'error', {name: e.name, message: e.message}));
 		} else {
 			throw e;
 		}
 	}
 }
 
-CCServerClient.prototype.parseData = function(data) {
-	var message = null
-	try {
-		message = new CCMessage(data);
-	} catch (e) {
-		throw new CCException('Message wrong format.');
-	}
-	return message;
-}
-
 CCServerClient.prototype.authorize = function(message) {
 	if (message.group != 'server' || message.command != 'authorize' || message.from != 0) {
-		throw new CCException('Not authorized.');
+		throw new CCException('NOT_AUTHORIZED', 'Not authorized.');
 	}
 	if (!message.data.group) {
-		throw new CCException('No group selected.');
+		throw new CCException('NO_GROUP', 'No group selected.');
 	}
 	this.authorized = true;
 	this.group = message.data.group;
@@ -72,7 +62,7 @@ CCServerClient.prototype.authorize = function(message) {
 
 CCServerClient.prototype.validateMessage = function(message) {
 	if (this.id != message.from) {
-		throw new CCException('Message wrong format. Id wrong.');
+		throw new CCException('WRONG_MESSAGE_FORMAT', 'Message wrong format: incompatible id\'s.');
 	}
 }
 

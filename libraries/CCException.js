@@ -1,5 +1,5 @@
-function CCException(message) {
-	this.name = 'CCException';
+function CCException(name, message) {
+	this.name = name;
 	this.message = message;
 }
 
