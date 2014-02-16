@@ -1,4 +1,4 @@
-var CCException = require('./CCException');
+var CCError = require('./CCError');
 
 function CCMessage(from, group, command, data) {
 	if (arguments.length == 1) {
@@ -28,13 +28,13 @@ CCMessage.prototype.initFromOneArgument = function(message) {
 		this.command = message.command;
 		this.data = message.data;
 	} catch (e) {
-		throw new CCException('WRONG_MESSAGE_FORMAT', 'Message wrong format.');
+		throw new CCError('WRONG_MESSAGE_FORMAT', 'Message wrong format.');
 	}
 }
 
 CCMessage.prototype.checkObjectParams = function(message) {
 	if (typeof message.from == 'undefined' || typeof message.group == 'undefined' || typeof message.command == 'undefined' || typeof message.data == 'undefined') {
-		throw new CCException('WRONG_MESSAGE_FORMAT', 'Message wrong format.');
+		throw new CCError('WRONG_MESSAGE_FORMAT', 'Message wrong format.');
 	}
 }
 

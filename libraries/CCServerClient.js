@@ -1,5 +1,5 @@
 var CCMessage = require('./CCMessage');
-var CCException = require('./CCException');
+var CCError = require('./CCError');
 
 function CCServerClient(client_id, socket, collection) {
 	this.id = client_id // here generate next ID;
@@ -57,7 +57,7 @@ CCServerClient.prototype.parseData = function(data) {
 			this.processMessage(message);
 		}
 	} catch(e) {
-		if (e instanceof CCException) {
+		if (e instanceof CCError) {
 			this.sendMessage(new CCMessage(0, 'server', 'error', {name: e.name, message: e.message}));
 		} else {
 			throw e;
@@ -67,10 +67,10 @@ CCServerClient.prototype.parseData = function(data) {
 
 CCServerClient.prototype.authorize = function(message) {
 	if (message.group != 'server' || message.command != 'authorize' || message.from != 0) {
-		throw new CCException('NOT_AUTHORIZED', 'Not authorized.');
+		throw new CCError('NOT_AUTHORIZED', 'Not authorized.');
 	}
 	if (!message.data.group) {
-		throw new CCException('NO_GROUP', 'No group selected.');
+		throw new CCError('NO_GROUP', 'No group selected.');
 	}
 	this.authorized = true;
 	this.group = message.data.group;
@@ -79,7 +79,7 @@ CCServerClient.prototype.authorize = function(message) {
 
 CCServerClient.prototype.validateMessage = function(message) {
 	if (this.id != message.from) {
-		throw new CCException('WRONG_MESSAGE_FORMAT', 'Message wrong format: incompatible id\'s.');
+		throw new CCError('WRONG_MESSAGE_FORMAT', 'Message wrong format: incompatible id\'s.');
 	}
 }
 
