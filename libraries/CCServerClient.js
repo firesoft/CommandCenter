@@ -9,6 +9,8 @@ function CCServerClient(client_id, socket, collection) {
 	
 	this.collection = collection;
 	
+	this.buffer = '';
+	
 	this.bindEvents();
 }
 
@@ -30,6 +32,21 @@ CCServerClient.prototype.onError = function() {
 
 CCServerClient.prototype.onDataReceived = function(data) {
 
+	this.buffer += data.toString();
+	
+	console.log(this.buffer);
+	
+	var messages = this.buffer.split('\n');
+	if (messages.length > 0) {
+		for (var i=0; i<messages.length-1; i++) {
+			this.parseData(messages[i]);
+		}
+		
+		this.buffer = messages[messages.length-1];
+	}
+}
+
+CCServerClient.prototype.parseData = function(data) {
 	try {
 		var message = new CCMessage(data);
 		
@@ -75,7 +92,7 @@ CCServerClient.prototype.isAuthorized = function() {
 }
 
 CCServerClient.prototype.sendMessage = function(message, callback) {
-	this.socket.write(message.serialize(), callback);
+	this.socket.write(message.prepareToSend(), callback);
 }
 
 module.exports = CCServerClient;

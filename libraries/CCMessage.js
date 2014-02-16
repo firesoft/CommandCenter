@@ -13,15 +13,16 @@ function CCMessage(from, group, command, data) {
 
 CCMessage.prototype.initFromOneArgument = function(message) {
 	try {
-		if (typeof message == 'object' && message instanceof Buffer) {
-			message = message.toString();
-		}
-
 		if (typeof message == 'string') {
 			message = JSON.parse(message);
 		}
+		
+		
+		
 		this.checkObjectParams(message);
-	
+		
+		console.log(message);
+		
 		this.from = message.from;
 		this.group = message.group;
 		this.command = message.command;
@@ -37,11 +38,11 @@ CCMessage.prototype.checkObjectParams = function(message) {
 	}
 }
 
-CCMessage.prototype.serialize = function() {
-	return JSON.stringify(this.toObject());
+CCMessage.prototype.prepareToSend = function() {
+	return JSON.stringify(this.toObject()) + '\n';
 }
 
-CCMessage.prototype.toObject() = function() {
+CCMessage.prototype.toObject = function() {
 	return {from: this.from, group: this.group, command: this.command, data: this.data};
 }
 
