@@ -37,6 +37,7 @@ CCClient.prototype.authorize = function() {
 
 CCClient.prototype.bindSocketEvents = function() {
 	this.socket.on('data', this.onData.bind(this));
+	this.socket.on('end', this.onEnd.bind(this));
 	this.socket.on('error', this.onError.bind(this));
 }
 
@@ -75,6 +76,12 @@ CCClient.prototype.parseData = function(messageString) {
 	} else if (this.status == 'authorized') {
 		this.emit('message', message.toObject());
 	}
+}
+
+CCClient.prototype.onEnd = function() {
+	this.status = 'offline';
+		this.tryReconnect();
+		this.emit('connectionEnd');
 }
 
 CCClient.prototype.onError = function(error) {

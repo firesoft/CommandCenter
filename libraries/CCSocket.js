@@ -1,15 +1,16 @@
 var net = require('net');
 var events = require('events');
+var util = require('util');
 var underscore = require('underscore');
+var CCError = require('./CCError');
 
 function CCSocket(params) {
 	events.EventEmitter.call(this);
 	
-	params = underscore(params, {autoReconnect: true});
-	
+	params = underscore.defaults(params, {autoReconnect: true});
 	this.socket = null;
-	this.address = null;
 	this.state = 'offline';
+	this.address = null;
 	this.buffer = '';
 	this.autoReconnect = params.autoReconnect;
 	this.reconnectTimeout = 1000;
@@ -26,16 +27,19 @@ CCSocket.prototype.connect = function(address) {
 	this.bindSocketEvents();
 }
 
+CCSocket.prototype.bindSocketEvents = function() {
+	//this.socket.on('connect', this.onConnect.bind(this));
+	this.socket.on('data', this.onData.bind(this));
+	this.socket.on('end', this.onEnd.bind(this));
+	this.socket.on('error', this.onError.bind(this));
+}
+
+/*
 CCSocket.prototype.onConnect = function() {
 	this.state = 'connected';
 	this.emit('connected');
 }
-
-CCSocket.prototype.bindSocketEvents = function() {
-	this.socket.on('connect', this.onConnect.bind(this));
-	this.socket.on('data', this.onData.bind(this));
-	this.socket.on('error', this.onError.bind(this));
-}
+*/
 
 CCSocket.prototype.onData = function(data) {
 	this.buffer += data.toString();
@@ -50,13 +54,25 @@ CCSocket.prototype.onData = function(data) {
 	}
 }
 
+CCSocket.prototype.onEnd = function() {
+	this.status = 'offline';
+	this.socket = null;
+	this.buffer = '';
+	
+	if (this.autoReconnect) {
+		this.tryReconnect();
+	}
+	this.emit('connectionEnd');
+}
+
 CCSocket.prototype.onError = function (error) {
 	this.status = 'offline';
 	this.socket = null;
 	this.buffer = '';
 	if (this.autoReconnect) {
 		this.tryReconnect();
-	} else if (error.code == 'ECONNREFUSED') {
+	} 
+	if (error.code == 'ECONNREFUSED') {
 		this.emit('cannotConnect');
 	} else if (error.code == 'ECONNRESET') {
 		this.emit('connectionLost');
