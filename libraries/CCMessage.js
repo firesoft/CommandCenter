@@ -17,16 +17,13 @@ CCMessage.prototype.initFromOneArgument = function(message) {
 			message = JSON.parse(message);
 		}
 		
-		
-		
 		this.checkObjectParams(message);
-		
-		console.log(message);
 		
 		this.from = message.from;
 		this.group = message.group;
 		this.command = message.command;
 		this.data = message.data;
+		
 	} catch (e) {
 		throw new CCError('WRONG_MESSAGE_FORMAT', 'Message wrong format.');
 	}

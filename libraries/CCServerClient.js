@@ -22,7 +22,6 @@ CCServerClient.prototype.bindEvents = function() {
 
 CCServerClient.prototype.onConnectionEnd = function() {
 	this.collection.removeClient(this.id);
-	console.log('ending connection');
 }
 
 CCServerClient.prototype.onError = function() {
