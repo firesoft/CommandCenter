@@ -1,23 +1,23 @@
 var CCMessage = require('./CCMessage');
 var CCError = require('./CCError');
+var CCServerSocket = require('./CCServerSocket');
 
 function CCServerClient(client_id, socket, collection) {
-	this.id = client_id // here generate next ID;
-	this.socket = socket;
+	this.id = client_id;
+	this.socket = new CCServerSocket({socket: socket});
+	
 	this.authorized = false;
 	this.group = null;
-	
 	this.collection = collection;
-	
-	this.buffer = '';
 	
 	this.bindEvents();
 }
 
 CCServerClient.prototype.bindEvents = function() {
-	this.socket.on('end', this.onConnectionEnd.bind(this));
-	this.socket.on('data', this.onDataReceived.bind(this));
-	this.socket.on('error', this.onError.bind(this));
+	this.socket.on('connectionEnd', this.onConnectionEnd.bind(this));
+	this.socket.on('connectionLost', this.onConnectionEnd.bind(this));
+	this.socket.on('message', this.onMessage.bind(this));
+	this.socket.on('otherError', this.onError.bind(this));
 }
 
 CCServerClient.prototype.onConnectionEnd = function() {
@@ -30,23 +30,11 @@ CCServerClient.prototype.onError = function() {
 }
 
 
-CCServerClient.prototype.onDataReceived = function(data) {
-
-	this.buffer += data.toString();
-	
-	console.log(this.buffer);
-	
-	var messages = this.buffer.split('\n');
-	if (messages.length > 0) {
-		for (var i=0; i<messages.length-1; i++) {
-			this.parseData(messages[i]);
-		}
-		
-		this.buffer = messages[messages.length-1];
-	}
+CCServerClient.prototype.onMessage = function(message) {
+	this.parseMessage(message);
 }
 
-CCServerClient.prototype.parseData = function(data) {
+CCServerClient.prototype.parseMessage = function(data) {
 	try {
 		var message = new CCMessage(data);
 		
@@ -92,7 +80,7 @@ CCServerClient.prototype.isAuthorized = function() {
 }
 
 CCServerClient.prototype.sendMessage = function(message, callback) {
-	this.socket.write(message.prepareToSend(), callback);
+	this.socket.send(message.prepareToSend(), callback);
 }
 
 module.exports = CCServerClient;

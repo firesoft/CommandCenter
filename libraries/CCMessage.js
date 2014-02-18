@@ -39,7 +39,7 @@ CCMessage.prototype.checkObjectParams = function(message) {
 }
 
 CCMessage.prototype.prepareToSend = function() {
-	return JSON.stringify(this.toObject()) + '\n';
+	return JSON.stringify(this.toObject());
 }
 
 CCMessage.prototype.toObject = function() {

@@ -1,45 +1,22 @@
-var net = require('net');
 var events = require('events');
 var util = require('util');
-var underscore = require('underscore');
 var CCError = require('./CCError');
 
-function CCSocket(params) {
+function CCSocket() {
 	events.EventEmitter.call(this);
 	
-	params = underscore.defaults(params, {autoReconnect: true});
 	this.socket = null;
 	this.state = 'offline';
-	this.address = null;
 	this.buffer = '';
-	this.autoReconnect = params.autoReconnect;
-	this.reconnectTimeout = 1000;
 }
 
 util.inherits(CCSocket, events.EventEmitter);
 
-CCSocket.prototype.connect = function(address) {
-	this.state = 'connecting';
-	this.address = address;
-	this.reconnectTimeout = 1000;
-	this.socket = net.connect(this.address);
-	this.socket.setKeepAlive(true);
-	this.bindSocketEvents();
-}
-
 CCSocket.prototype.bindSocketEvents = function() {
-	//this.socket.on('connect', this.onConnect.bind(this));
 	this.socket.on('data', this.onData.bind(this));
 	this.socket.on('end', this.onEnd.bind(this));
 	this.socket.on('error', this.onError.bind(this));
 }
-
-/*
-CCSocket.prototype.onConnect = function() {
-	this.state = 'connected';
-	this.emit('connected');
-}
-*/
 
 CCSocket.prototype.onData = function(data) {
 	this.buffer += data.toString();
@@ -59,9 +36,6 @@ CCSocket.prototype.onEnd = function() {
 	this.socket = null;
 	this.buffer = '';
 	
-	if (this.autoReconnect) {
-		this.tryReconnect();
-	}
 	this.emit('connectionEnd');
 }
 
@@ -69,26 +43,14 @@ CCSocket.prototype.onError = function (error) {
 	this.status = 'offline';
 	this.socket = null;
 	this.buffer = '';
-	if (this.autoReconnect) {
-		this.tryReconnect();
-	} 
+	
 	if (error.code == 'ECONNREFUSED') {
 		this.emit('cannotConnect');
 	} else if (error.code == 'ECONNRESET') {
 		this.emit('connectionLost');
 	} else {
-		this.emit('otherError', error);
+		this.emit('error', error);
 	}
-}
-
-CCSocket.prototype.tryReconnect = function() {
-	setTimeout(this.connect.bind(this), this.reconnectTimeout);
-	this.updateReconnectTimeout();
-}
-
-CCSocket.prototype.updateReconnectTimeout = function() {
-	this.reconnectTimeout *= 2;
-	this.reconnectTimeout = Math.min(30000, this.reconnectTimeout);
 }
 
 CCSocket.prototype.prepareMessage = function(message) {
@@ -97,13 +59,11 @@ CCSocket.prototype.prepareMessage = function(message) {
 
 CCSocket.prototype.send = function(message, callback) {
 	if (this.state == 'connected') {
-		this.socket.write(this.prepareMessage(message), function() {
-			callback(null);
-		});
-	} else {
+		this.socket.write(this.prepareMessage(message),	callback);
+	} else if (callback) {
 		process.nextTick(function() {
 			callback(new CCError('NOT_CONNECTED', 'Socket is not connected.'));
-		})
+		});
 	}
 }
 
