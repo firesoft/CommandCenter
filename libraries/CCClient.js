@@ -1,6 +1,5 @@
 var util = require('util');
 var events = require('events');
-var net = require('net');
 var CCMessage = require('./CCMessage');
 var CCClientSocket = require('./CCClientSocket');
 
@@ -28,9 +27,7 @@ CCClient.prototype.onConnect = function() {
 
 
 CCClient.prototype.authorize = function() {
-	if (this.status == 'connected') {
-		this.sendMessage(new CCMessage(0, 'server', 'authorize', {group: this.group}));
-	}
+	this.sendMessage(new CCMessage(0, 'server', 'authorize', {group: this.group}));
 }
 
 CCClient.prototype.bindSocketEvents = function() {
@@ -43,10 +40,10 @@ CCClient.prototype.bindSocketEvents = function() {
 }
 
 CCClient.prototype.onMessage = function (message) {
-	this.parseMessage(message);
+	this.processMessage(message);
 }
 
-CCClient.prototype.parseMessage = function(messageString) {
+CCClient.prototype.processMessage = function(messageString) {
 
 	var message = null;
 	try {
@@ -56,14 +53,7 @@ CCClient.prototype.parseMessage = function(messageString) {
 		return;
 	}
 	if (this.status == 'connected') {
-		if (message.from == 0 && message.group == 'server' && message.command == 'authorize') {
-			this.status = 'authorized';
-			this.emit('authorize');
-		} else if (message.group == 'server' && message.command == 'error') {
-			this.emit('error', message.data);
-		} else {
-			//here log message as error
-		}
+		this.processAuthorizeMessage(message);
 	} else if (this.status == 'authorized') {
 		this.emit('message', message.toObject());
 	}
@@ -79,6 +69,17 @@ CCClient.prototype.onError = function(error) {
 
 CCClient.prototype.sendMessage = function(message, callback) {
 	this.socket.send(message.prepareToSend(), callback);
+}
+
+CCClient.prototype.processAuthorizeMessage = function(message) {
+	if (message.from == 0 && message.group == 'server' && message.command == 'authorize') {
+		this.status = 'authorized';
+		this.emit('authorize');
+	} else if (message.group == 'server' && message.command == 'error') {
+		this.emit('error', message.data);
+	} else {
+		//here log message as error
+	}
 }
 
 module.exports = CCClient;
