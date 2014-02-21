@@ -5,17 +5,18 @@ var CCClientSocket = require('./CCClientSocket');
 
 function CCClient(params) {
 	events.EventEmitter.call(this);
+	this.client_id = 0;
 	this.socket = new CCClientSocket();
 	this.status = 'offline';
-	this.connectionAddress = {host: 'localhost', port: 8088};
-	this.group = params.group;
+	this.group = '';
 	
 	this.bindSocketEvents();
 }
 
 util.inherits(CCClient, events.EventEmitter);
 
-CCClient.prototype.connect = function() {
+CCClient.prototype.connect = function(connectionAddress, group) {
+	this.group = group;
 	this.status = 'connecting';
 	this.socket.connect(this.connectionAddress);
 }
@@ -27,7 +28,7 @@ CCClient.prototype.onConnect = function() {
 
 
 CCClient.prototype.authorize = function() {
-	this.sendMessage(new CCMessage(0, 'server', 'authorize', {group: this.group}));
+	this.send({group: 'server', command: 'authorize', data: {group: this.group}});
 }
 
 CCClient.prototype.bindSocketEvents = function() {
@@ -67,12 +68,23 @@ CCClient.prototype.onError = function(error) {
 	this.status = 'offline';
 }
 
-CCClient.prototype.sendMessage = function(message, callback) {
-	this.socket.send(message.prepareToSend(), callback);
+CCClient.prototype.send = function(message, callback) {
+	this.socket.send(this.prepareMessage(message), callback);
+}
+
+CCClient.prototype.prepareMessage = function(message) {
+	try {
+		message.from = this.client_id;
+		message = new CCMessage(message);
+		return message.prepareToSend();
+	} catch(e) {
+		throw new Error('Wrong message format.');
+	}
 }
 
 CCClient.prototype.processAuthorizeMessage = function(message) {
 	if (message.from == 0 && message.group == 'server' && message.command == 'authorize') {
+		this.client_id = message.data.id;
 		this.status = 'authorized';
 		this.emit('authorize');
 	} else if (message.group == 'server' && message.command == 'error') {
