@@ -3,7 +3,7 @@ var events = require('events');
 var CCMessage = require('./CCMessage');
 var CCClientSocket = require('./CCClientSocket');
 
-function CCClient(params) {
+function CCClient() {
 	events.EventEmitter.call(this);
 	this.client_id = 0;
 	this.socket = new CCClientSocket();
@@ -16,9 +16,30 @@ function CCClient(params) {
 util.inherits(CCClient, events.EventEmitter);
 
 CCClient.prototype.connect = function(connectionAddress, group) {
-	this.group = group;
+	this.initGroup(group);
+	this.checkAddress(connectionAddress);
 	this.status = 'connecting';
-	this.socket.connect(this.connectionAddress);
+	this.socket.connect(connectionAddress);
+}
+
+CCClient.prototype.initGroup = function(group) {
+	if (!group || (typeof group != 'string') || (group == 'server')) {
+		throw new Error('Invalid group name.');
+	}
+	this.group = group;
+}
+
+CCClient.prototype.checkAddress = function(address) {
+	if (!address || typeof address != 'object') {
+		throw new Error('connectionAddress not valid.');
+	}
+	if (typeof address.host != 'string') {
+		throw new Error('connectionAddress must have host property (string).');
+	}
+	
+	if (typeof address.port != 'number') {
+		throw new Error('connectionAddress must have port property (number).');
+	}
 }
 
 CCClient.prototype.onConnect = function() {
