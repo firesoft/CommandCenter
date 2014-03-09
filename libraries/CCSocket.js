@@ -32,7 +32,10 @@ CCSocket.prototype.onData = function(data) {
 }
 
 CCSocket.prototype.onEnd = function() {
-	this.status = 'offline';
+	console.log('onEnd');
+	this.state = 'offline';
+	this.socket.removeAllListeners();
+	//this.socket.destroy();
 	this.socket = null;
 	this.buffer = '';
 	
@@ -40,17 +43,22 @@ CCSocket.prototype.onEnd = function() {
 }
 
 CCSocket.prototype.onError = function (error) {
-	this.status = 'offline';
-	this.socket = null;
-	this.buffer = '';
-	
-	if (error.code == 'ECONNREFUSED') {
-		this.emit('cannotConnect');
-	} else if (error.code == 'ECONNRESET') {
-		this.emit('connectionLost');
-	} else {
-		this.emit('error', error);
+	this.state = 'offline';
+	//this.socket.removeAllListeners();
+	if (this.socket) {
+		this.socket.destroy();
+		this.socket = null;
+		this.buffer = '';
+		
+		if (error.code == 'ECONNREFUSED') {
+			this.emit('cannotConnect');
+		} else if (error.code == 'ECONNRESET' || error.code == 'ECONNABORTED') {
+			this.emit('connectionLost');
+		} else {
+			this.emit('error', error);
+		}
 	}
+	
 }
 
 CCSocket.prototype.prepareMessage = function(message) {

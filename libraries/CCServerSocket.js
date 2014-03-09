@@ -1,5 +1,4 @@
 var util = require('util');
-var underscore = require('underscore');
 var CCSocket = require('./CCSocket');
 
 function CCServerSocket(params) {

@@ -21,7 +21,11 @@ CCServerClient.prototype.bindEvents = function() {
 }
 
 CCServerClient.prototype.onConnectionEnd = function() {
-	this.collection.removeClient(this.id);
+	this.authorized = false;
+	if (this.collection) {
+		this.collection.removeClient(this.id);
+		this.collection = null;
+	}
 }
 
 CCServerClient.prototype.onError = function() {
