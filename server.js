@@ -1,4 +1,4 @@
-var commandcenter = require('./index.js');
-var server = new commandcenter.CCServer();
+var cc = require('./index');
+var server = cc.get('server');
 
-server.run();
+server.listen(8088);
